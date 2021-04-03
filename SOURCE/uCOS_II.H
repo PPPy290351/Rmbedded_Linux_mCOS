@@ -408,6 +408,8 @@ typedef struct os_tcb {
 #if OS_TASK_DEL_EN > 0
     BOOLEAN        OSTCBDelReq;        /* Indicates whether a task needs to delete itself              */
 #endif
+    INT8U           compTime;
+    INT8U           period;
 } OS_TCB;
 
 /*$PAGE*/
@@ -1146,3 +1148,9 @@ void          OSTickISR(void);
 #ifndef OS_SCHED_LOCK_EN
 #error  "OS_CFG.H, Missing OS_SCHED_LOCK_EN: Include code for OSSchedLock() and OSSchedUnlock()"
 #endif
+
+// My defined 
+// OS_EXT char CtxSwMessage[500][30];
+// OS_EXT int CtxSwMessageTop;
+extern char CtxSwMessage[500][30];
+extern int CtxSwMessageTop;

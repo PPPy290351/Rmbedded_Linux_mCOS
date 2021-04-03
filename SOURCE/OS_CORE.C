@@ -186,6 +186,8 @@ void  OSIntExit (void)
             OSPrioHighRdy = (INT8U)((OSIntExitY << 3) + OSUnMapTbl[OSRdyTbl[OSIntExitY]]);
             if (OSPrioHighRdy != OSPrioCur) {              /* No Ctx Sw if current task is highest rdy */
                 OSTCBHighRdy  = OSTCBPrioTbl[OSPrioHighRdy];
+                // sprintf(CtxSwMessage[CtxSwMessageTop++], "%u Preempt %hhu -> %hhu", OSTime, OSTCBCur->OSTCBId, OSTCBHighRdy->OSTCBId);
+                sprintf(CtxSwMessage[CtxSwMessageTop++], "%5d Preempt %d -> %d", (int)OSTime, (int)OSPrioCur, (int)OSPrioHighRdy);
                 OSCtxSwCtr++;                              /* Keep track of the number of ctx switches */
                 OSIntCtxSw();                              /* Perform interrupt level ctx switch       */
             }
@@ -303,6 +305,7 @@ void  OSStart (void)
         OSPrioCur     = OSPrioHighRdy;
         OSTCBHighRdy  = OSTCBPrioTbl[OSPrioHighRdy]; /* Point to highest priority task ready to run    */
         OSTCBCur      = OSTCBHighRdy;
+        sprintf(CtxSwMessage[CtxSwMessageTop++], "%u Start %hhu", OSTime, OSTCBCur->OSTCBId);
         OSStartHighRdy();                            /* Execute target specific code to start task     */
     }
 }
@@ -392,6 +395,9 @@ void  OSTimeTick (void)
             ptcb = ptcb->OSTCBNext;                        /* Point at next TCB in TCB list            */
             OS_EXIT_CRITICAL();
         }
+        OS_ENTER_CRITICAL();
+        OSTCBCur->compTime -= 1;
+        OS_EXIT_CRITICAL();
     }
 }
 /*$PAGE*/
@@ -880,6 +886,9 @@ void  OS_Sched (void)
         OSPrioHighRdy = (INT8U)((y << 3) + OSUnMapTbl[OSRdyTbl[y]]);
         if (OSPrioHighRdy != OSPrioCur) {              /* No Ctx Sw if current task is highest rdy     */
             OSTCBHighRdy = OSTCBPrioTbl[OSPrioHighRdy];
+            // ! TCBCur is not work, but I have no clue about this.
+            // sprintf(CtxSwMessage[CtxSwMessageTop++], "%u Complete %hhu -> %hhu", OSTime, OSTCBCur->OSTCBId, OSTCBHighRdy->OSTCBId);
+            sprintf(CtxSwMessage[CtxSwMessageTop++], "%5d Complete %d -> %d", (int)OSTime, (int)OSPrioCur, (int)OSPrioHighRdy);
             OSCtxSwCtr++;                              /* Increment context switch counter             */
             OS_TASK_SW();                              /* Perform a context switch                     */
         }
