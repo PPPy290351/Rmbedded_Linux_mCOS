@@ -13,5 +13,5 @@ Education use to learn the real time OS and scheduling theory
 
 - For Lab3
 ```
-
+- check the task status is "OS_STAT_RDY"
 ```

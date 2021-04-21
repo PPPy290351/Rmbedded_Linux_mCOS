@@ -133,18 +133,42 @@ void  TaskStart (void *pdata)
     // AckMbox = OSMboxCreate((void *)0);                     /* Create 2 message mailboxes               */
     // TxMbox  = OSMboxCreate((void *)0);
 
+    OSTCBCur->period = 10;
+    OSTCBCur->deadline = 10;
+
     TaskStartCreateTasks();                                /* Create all other tasks                   */
 
-    for (;;) {
+    // for (;;) {
 
-        if (PC_GetKey(&key)) {                             /* See if key has been pressed              */
-            if (key == 0x1B) {                             /* Yes, see if it's the ESCAPE key          */
-                PC_DOSReturn();                            /* Yes, return to DOS                       */
-            }
+    //     if (PC_GetKey(&key)) {                             /* See if key has been pressed              */
+    //         if (key == 0x1B) {                             /* Yes, see if it's the ESCAPE key          */
+    //             PC_DOSReturn();                            /* Yes, return to DOS                       */
+    //         }
+    //     }
+    //     TaskPrintMsg();
+    //     OSCtxSwCtr = 0;                                    /* Clear context switch counter             */
+    //     OSTimeDly(OS_TICKS_PER_SEC);                       /* Wait one second                          */
+    // }
+    int start ; //the start time
+    int end ; //the end time
+    int toDelay;
+    int C = 1;
+    OSTCBCur->compTime = C;
+    start=OSTimeGet();
+    while(1)
+    {
+        while(OSTCBCur->compTime>0) //C ticks
+        {
+            TaskPrintMsg();                                   /* Clear context switch counter             */
         }
-        TaskPrintMsg();
-        OSCtxSwCtr = 0;                                    /* Clear context switch counter             */
-        OSTimeDly(OS_TICKS_PER_SEC);                       /* Wait one second                          */
+        end=OSTimeGet() ; // end time
+        toDelay=(OSTCBCur->period)-(end-start) ;
+        start=start+(OSTCBCur->period) ; // next start time
+        OSTCBCur->compTime=C ;// reset the counter (c ticks for computation)
+        // @ deadline refresh
+        OSTCBCur->deadline=start+(OSTCBCur->period);
+        OSCtxSwCtr = 0;  
+        OSTimeDly (toDelay); // delay and wait (P-C) times
     }
 }
 /*$PAGE*/

@@ -199,6 +199,8 @@ void  OSIntExit (void)
                 OSTCBDDLUrgent = OSTCBListCur;
                 while((OSTCBListCur = OSTCBListCur->OSTCBNext) != NULL){
                     // OSTCBListCur = OSTCBListCur->OSTCBNext;
+                    if(OSTCBListCur->OSTCBStat != OS_STAT_RDY)
+                        continue;
                     if(deadline > OSTCBListCur->deadline){
                         OSTCBDDLUrgent = OSTCBListCur;
                         deadline = OSTCBListCur->deadline;
@@ -206,7 +208,7 @@ void  OSIntExit (void)
                 }
             }
             //TODO: fix the "OSTCBDDLUrgent"
-            sprintf(CtxSwMessage[CtxSwMessageTop++], "%5d Preempt %d -> %d", (int)OSTime, (int)OSPrioCur, (int)OSPrioHighRdy);
+            sprintf(CtxSwMessage[CtxSwMessageTop++], "%5d Preempt %d -> %d", (int)OSTime, (int)OSTCBCur->OSTCBId, (int)OSTCBDDLUrgent->OSTCBId);
             OSTCBHighRdy = OSTCBDDLUrgent;
             OSCtxSwCtr++;
             OSIntCtxSw();  
@@ -318,13 +320,31 @@ void  OSStart (void)
 
 
     if (OSRunning == FALSE) {
-        y             = OSUnMapTbl[OSRdyGrp];        /* Find highest priority's task priority number   */
-        x             = OSUnMapTbl[OSRdyTbl[y]];
-        OSPrioHighRdy = (INT8U)((y << 3) + x);
-        OSPrioCur     = OSPrioHighRdy;
-        OSTCBHighRdy  = OSTCBPrioTbl[OSPrioHighRdy]; /* Point to highest priority task ready to run    */
-        OSTCBCur      = OSTCBHighRdy;
+        // y             = OSUnMapTbl[OSRdyGrp];        /* Find highest priority's task priority number   */
+        // x             = OSUnMapTbl[OSRdyTbl[y]];
+        // OSPrioHighRdy = (INT8U)((y << 3) + x);
+        // OSPrioCur     = OSPrioHighRdy;
+        // OSTCBHighRdy  = OSTCBPrioTbl[OSPrioHighRdy]; /* Point to highest priority task ready to run    */
+        // OSTCBCur      = OSTCBHighRdy;
+        OSTCBListCur = OSTCBList;
+        INT8U deadline;
+        if (OSTCBListCur != NULL)
+        {
+            deadline = OSTCBListCur->deadline;
+            OSTCBDDLUrgent = OSTCBListCur;
+            while((OSTCBListCur = OSTCBListCur->OSTCBNext) != NULL){
+                // OSTCBListCur = OSTCBListCur->OSTCBNext;
+                if(OSTCBListCur->OSTCBStat != OS_STAT_RDY)
+                    continue;
+                if(deadline > OSTCBListCur->deadline){
+                    OSTCBDDLUrgent = OSTCBListCur;
+                    deadline = OSTCBListCur->deadline;
+                }
+            }
+        }
         sprintf(CtxSwMessage[CtxSwMessageTop++], "%u Start %hhu", OSTime, OSTCBCur->OSTCBId);
+        OSTCBHighRdy = OSTCBDDLUrgent;
+        OSTCBCur = OSTCBHighRdy;
         OSStartHighRdy();                            /* Execute target specific code to start task     */
     }
 }
@@ -901,16 +921,36 @@ void  OS_Sched (void)
 
     OS_ENTER_CRITICAL();
     if ((OSIntNesting == 0) && (OSLockNesting == 0)) { /* Sched. only if all ISRs done & not locked    */
-        y             = OSUnMapTbl[OSRdyGrp];          /* Get pointer to HPT ready to run              */
-        OSPrioHighRdy = (INT8U)((y << 3) + OSUnMapTbl[OSRdyTbl[y]]);
-        if (OSPrioHighRdy != OSPrioCur) {              /* No Ctx Sw if current task is highest rdy     */
-            OSTCBHighRdy = OSTCBPrioTbl[OSPrioHighRdy];
-            // ! TCBCur is not work, but I have no clue about this.
-            // sprintf(CtxSwMessage[CtxSwMessageTop++], "%u Complete %hhu -> %hhu", OSTime, OSTCBCur->OSTCBId, OSTCBHighRdy->OSTCBId);
-            sprintf(CtxSwMessage[CtxSwMessageTop++], "%5d Complete %d -> %d", (int)OSTime, (int)OSPrioCur, (int)OSPrioHighRdy);
-            OSCtxSwCtr++;                              /* Increment context switch counter             */
-            OS_TASK_SW();                              /* Perform a context switch                     */
+        // y             = OSUnMapTbl[OSRdyGrp];          /* Get pointer to HPT ready to run              */
+        // OSPrioHighRdy = (INT8U)((y << 3) + OSUnMapTbl[OSRdyTbl[y]]);
+        // if (OSPrioHighRdy != OSPrioCur) {              /* No Ctx Sw if current task is highest rdy     */
+        //     OSTCBHighRdy = OSTCBPrioTbl[OSPrioHighRdy];
+        //     // ! TCBCur is not work, but I have no clue about this.
+        //     // sprintf(CtxSwMessage[CtxSwMessageTop++], "%u Complete %hhu -> %hhu", OSTime, OSTCBCur->OSTCBId, OSTCBHighRdy->OSTCBId);
+        //     sprintf(CtxSwMessage[CtxSwMessageTop++], "%5d Complete %d -> %d", (int)OSTime, (int)OSPrioCur, (int)OSPrioHighRdy);
+        //     OSCtxSwCtr++;                              /* Increment context switch counter             */
+        //     OS_TASK_SW();                              /* Perform a context switch                     */
+        // }
+        OSTCBListCur = OSTCBList;
+        INT8U deadline;
+        if (OSTCBListCur != NULL)
+        {
+            deadline = OSTCBListCur->deadline;
+            OSTCBDDLUrgent = OSTCBListCur;
+            while((OSTCBListCur = OSTCBListCur->OSTCBNext) != NULL){
+                // OSTCBListCur = OSTCBListCur->OSTCBNext;
+                if(OSTCBListCur->OSTCBStat != OS_STAT_RDY)
+                    continue;
+                if(deadline > OSTCBListCur->deadline){
+                    OSTCBDDLUrgent = OSTCBListCur;
+                    deadline = OSTCBListCur->deadline;
+                }
+            }
         }
+        sprintf(CtxSwMessage[CtxSwMessageTop++], "%5d Complete %d -> %d", (int)OSTime, (int)OSTCBCur->OSTCBId, (int)OSTCBDDLUrgent->OSTCBId);
+        OSTCBHighRdy = OSTCBDDLUrgent;
+        OSCtxSwCtr++; 
+        OS_TASK_SW(); 
     }
     OS_EXIT_CRITICAL();
 }
