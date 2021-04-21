@@ -410,6 +410,7 @@ typedef struct os_tcb {
 #endif
     INT8U           compTime;
     INT8U           period;
+    INT8U           deadline;
 } OS_TCB;
 
 /*$PAGE*/
@@ -1154,3 +1155,4 @@ void          OSTickISR(void);
 // OS_EXT int CtxSwMessageTop;
 extern char CtxSwMessage[500][30];
 extern int CtxSwMessageTop;
+OS_EXT  OS_TCB           *OSTCBCur;

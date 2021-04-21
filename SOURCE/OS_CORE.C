@@ -182,15 +182,34 @@ void  OSIntExit (void)
             OSIntNesting--;
         }
         if ((OSIntNesting == 0) && (OSLockNesting == 0)) { /* Reschedule only if all ISRs complete ... */
-            OSIntExitY    = OSUnMapTbl[OSRdyGrp];          /* ... and not locked.                      */
-            OSPrioHighRdy = (INT8U)((OSIntExitY << 3) + OSUnMapTbl[OSRdyTbl[OSIntExitY]]);
-            if (OSPrioHighRdy != OSPrioCur) {              /* No Ctx Sw if current task is highest rdy */
-                OSTCBHighRdy  = OSTCBPrioTbl[OSPrioHighRdy];
-                // sprintf(CtxSwMessage[CtxSwMessageTop++], "%u Preempt %hhu -> %hhu", OSTime, OSTCBCur->OSTCBId, OSTCBHighRdy->OSTCBId);
-                sprintf(CtxSwMessage[CtxSwMessageTop++], "%5d Preempt %d -> %d", (int)OSTime, (int)OSPrioCur, (int)OSPrioHighRdy);
-                OSCtxSwCtr++;                              /* Keep track of the number of ctx switches */
-                OSIntCtxSw();                              /* Perform interrupt level ctx switch       */
+            // OSIntExitY    = OSUnMapTbl[OSRdyGrp];          /* ... and not locked.                      */
+            // OSPrioHighRdy = (INT8U)((OSIntExitY << 3) + OSUnMapTbl[OSRdyTbl[OSIntExitY]]);
+            // if (OSPrioHighRdy != OSPrioCur) {              /* No Ctx Sw if current task is highest rdy */
+            //     OSTCBHighRdy  = OSTCBPrioTbl[OSPrioHighRdy];
+            //     // sprintf(CtxSwMessage[CtxSwMessageTop++], "%u Preempt %hhu -> %hhu", OSTime, OSTCBCur->OSTCBId, OSTCBHighRdy->OSTCBId);
+            //     sprintf(CtxSwMessage[CtxSwMessageTop++], "%5d Preempt %d -> %d", (int)OSTime, (int)OSPrioCur, (int)OSPrioHighRdy);
+            //     OSCtxSwCtr++;                              /* Keep track of the number of ctx switches */
+            //     OSIntCtxSw();                              /* Perform interrupt level ctx switch       */
+            // }
+            OSTCBListCur = OSTCBList;
+            INT8U deadline;
+            if (OSTCBListCur != NULL)
+            {
+                deadline = OSTCBListCur->deadline;
+                OSTCBDDLUrgent = OSTCBListCur;
+                while((OSTCBListCur = OSTCBListCur->OSTCBNext) != NULL){
+                    // OSTCBListCur = OSTCBListCur->OSTCBNext;
+                    if(deadline > OSTCBListCur->deadline){
+                        OSTCBDDLUrgent = OSTCBListCur;
+                        deadline = OSTCBListCur->deadline;
+                    }
+                }
             }
+            //TODO: fix the "OSTCBDDLUrgent"
+            sprintf(CtxSwMessage[CtxSwMessageTop++], "%5d Preempt %d -> %d", (int)OSTime, (int)OSPrioCur, (int)OSPrioHighRdy);
+            OSTCBHighRdy = OSTCBDDLUrgent;
+            OSCtxSwCtr++;
+            OSIntCtxSw();  
         }
         OS_EXIT_CRITICAL();
     }
