@@ -13,5 +13,7 @@ Education use to learn the real time OS and scheduling theory
 
 - For Lab3
 ```
-
+1. add deadline into TCB.
+2. need to add deadline with period.
+3. need to compare the deadline number on OS_xxx
 ```

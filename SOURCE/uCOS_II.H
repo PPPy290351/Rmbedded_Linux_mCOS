@@ -1155,4 +1155,5 @@ void          OSTickISR(void);
 // OS_EXT int CtxSwMessageTop;
 extern char CtxSwMessage[500][30];
 extern int CtxSwMessageTop;
-OS_EXT  OS_TCB           *OSTCBCur;
+OS_EXT  OS_TCB           *OSTCBListCur;
+OS_EXT  OS_TCB           *OSTCBDDLUrgent;
