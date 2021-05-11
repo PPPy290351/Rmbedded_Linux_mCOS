@@ -23,15 +23,15 @@
 #define          TASK_START_ID       0                /* Application tasks IDs                         */
 #define          TASK_1_ID           1
 #define          TASK_2_ID           2
-#define          TASK_3_ID           3
-#define          PrintTask_ID        10
+// #define          TASK_3_ID           3
+// #define          PrintTask_ID        10
 
 
 #define          TASK_START_PRIO    0                /* Application tasks priorities                  */
 #define          TASK_1_PRIO        1
 #define          TASK_2_PRIO        2
-#define          TASK_3_PRIO        3
-#define          PrintTask_PRIO     10
+// #define          TASK_3_PRIO        3
+// #define          PrintTask_PRIO     10
 
 /*
 *********************************************************************************************************
@@ -42,8 +42,8 @@
 OS_STK        TaskStartStk[TASK_STK_SIZE];            /* Startup    task stack                         */
 OS_STK        Task1Stk[TASK_STK_SIZE];                /* Task #1    task stack                         */
 OS_STK        Task2Stk[TASK_STK_SIZE];                /* Task #2    task stack                         */
-OS_STK        Task3Stk[TASK_STK_SIZE];                /* Task #3    task stack                         */
-OS_STK        PrintTaskStk[TASK_STK_SIZE];
+// OS_STK        Task3Stk[TASK_STK_SIZE];                /* Task #3    task stack                         */
+// OS_STK        PrintTaskStk[TASK_STK_SIZE];
 
 char CtxSwMessage[500][30];
 int CtxSwMessageTop = 0;
@@ -63,7 +63,7 @@ static  void  TaskStartCreateTasks(void);
 static  void  TaskPrintMsg (void);
         void  Task1(void *data);
         void  Task2(void *data);
-        void  Task3(void *data);
+        // void  Task3(void *data);
         void  PrintTask(void *data);
 
 /*$PAGE*/
@@ -238,7 +238,8 @@ void  Task1 (void *pdata)
     int C = 1;
     OSTCBCur->compTime = C;
     OSTCBCur->period = 3;
-    start=OSTimeGet();
+    OSTCBCur->deadline = 3;
+    start=OSTimeGet(); // ! 0.1
     while(1)
     {
         while(OSTCBCur->compTime>0) //C ticks
@@ -247,9 +248,13 @@ void  Task1 (void *pdata)
         // do nothing
 
         }
-        end=OSTimeGet() ; // end time
+        end=OSTimeGet() ; // end time // ! 1.1
+        // @ end-start : exec time
+        // @ OSTCBCur->period : exec time
         toDelay=(OSTCBCur->period)-(end-start) ;
-        start=start+(OSTCBCur->period) ; // next start time
+        // @ Next start reset;
+        start=start+(OSTCBCur->period) ; // next start time // ! 0.1 + 3 = 3.1
+        OSTCBCur->deadline = start+OSTCBCur->period; // ! 3.1 + 3 = 6.1
         OSTCBCur->compTime=C ;// reset the counter (c ticks for computation)
         OSTimeDly (toDelay); // delay and wait (P-C) times
     }
@@ -270,7 +275,8 @@ void  Task2 (void *data)
     int toDelay;
     int C = 3;
     OSTCBCur->compTime = C;
-    OSTCBCur->period = 6;
+    OSTCBCur->period = 5;
+    OSTCBCur->deadline = 5;
     start=OSTimeGet();
     while(1)
     {
@@ -283,6 +289,7 @@ void  Task2 (void *data)
         end=OSTimeGet() ; // end time
         toDelay=(OSTCBCur->period)-(end-start) ;
         start=start+(OSTCBCur->period) ; // next start time
+        OSTCBCur->deadline = start+OSTCBCur->period;
         OSTCBCur->compTime=C ;// reset the counter (c ticks for computation)
         OSTimeDly (toDelay); // delay and wait (P-C) times
     }
@@ -290,29 +297,29 @@ void  Task2 (void *data)
 /*$PAGE*/
 
 /* Added by Chi-Shen */
-// @ because Task3 priority is the lowest, so we only monitor this task if there is any deadline missed 
-void  Task3(void *data)
-{
-    int start ; //the start time
-    int end ; //the end time
-    int toDelay;
-    int C = 4;
-    OSTCBCur->compTime = C;
-    OSTCBCur->period = 9;
-    start=OSTimeGet();
-    while(1)
-    {
-        while(OSTCBCur->compTime>0) //C ticks
-        {
-        }
-        end=OSTimeGet() ; // end time
-        toDelay=(OSTCBCur->period)-(end-start) ;
-        start=start+(OSTCBCur->period) ; // next start time
-        if(toDelay < 0){
-            sprintf(CtxSwMessage[CtxSwMessageTop++], "Task3 deadline missed : %d", start);
-        }
-        OSTCBCur->compTime=C ;// reset the counter (c ticks for computation)
-        OSTimeDly (toDelay); // delay and wait (P-C) times
-    }
-}
+// // @ because Task3 priority is the lowest, so we only monitor this task if there is any deadline missed 
+// void  Task3(void *data)
+// {
+//     int start ; //the start time
+//     int end ; //the end time
+//     int toDelay;
+//     int C = 4;
+//     OSTCBCur->compTime = C;
+//     OSTCBCur->period = 9;
+//     start=OSTimeGet();
+//     while(1)
+//     {
+//         while(OSTCBCur->compTime>0) //C ticks
+//         {
+//         }
+//         end=OSTimeGet() ; // end time
+//         toDelay=(OSTCBCur->period)-(end-start) ;
+//         start=start+(OSTCBCur->period) ; // next start time
+//         if(toDelay < 0){
+//             sprintf(CtxSwMessage[CtxSwMessageTop++], "Task3 deadline missed : %d", start);
+//         }
+//         OSTCBCur->compTime=C ;// reset the counter (c ticks for computation)
+//         OSTimeDly (toDelay); // delay and wait (P-C) times
+//     }
+// }
 

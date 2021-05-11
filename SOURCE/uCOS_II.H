@@ -410,6 +410,7 @@ typedef struct os_tcb {
 #endif
     INT8U           compTime;
     INT8U           period;
+    INT8U           deadline;
 } OS_TCB;
 
 /*$PAGE*/
@@ -465,6 +466,8 @@ OS_EXT  OS_TCB           *OSTCBHighRdy;                    /* Pointer to highest
 OS_EXT  OS_TCB           *OSTCBList;                       /* Pointer to doubly linked list of TCBs    */
 OS_EXT  OS_TCB           *OSTCBPrioTbl[OS_LOWEST_PRIO + 1];/* Table of pointers to created TCBs        */
 OS_EXT  OS_TCB            OSTCBTbl[OS_MAX_TASKS + OS_N_SYS_TASKS];   /* Table of TCBs                  */
+
+OS_EXT  OS_TCB           *OSTCBCurHigh;
 
 #if (OS_MEM_EN > 0) && (OS_MAX_MEM_PART > 0)
 OS_EXT  OS_MEM           *OSMemFreeList;            /* Pointer to free list of memory partitions       */
